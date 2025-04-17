@@ -29,7 +29,7 @@ MODEL_PATHS = {
 }
 
 MODEL_DRIVE_IDS = {
-    "EfficientNetB3": "1tdmfQlBIazZL1g_ko8MlK_7Qxh5Ln8rg",
+    "EfficientNetB3": "14Wl06h312YuMBXmSIQF97y8dZv3zIzq8",
     "ResNet50": "10FwdcjZwgMmOHmh1a9h1cE_C-rVn5lwb",
     "MobileNetV2": "1gYdYkWMiDauWvTMPyCUyKWC6i21FQp7a",
     "DenseNet121": "1XupPeRPIomj-4KR8ri-zRte90O3QXTHg"
