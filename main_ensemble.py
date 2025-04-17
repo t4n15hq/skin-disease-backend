@@ -10,6 +10,7 @@ import os
 import gdown
 from keras.saving import register_keras_serializable
 
+# Enable unsafe deserialization for custom layers/functions
 keras.config.enable_unsafe_deserialization()
 
 # --- CUSTOM FUNCTION ---
