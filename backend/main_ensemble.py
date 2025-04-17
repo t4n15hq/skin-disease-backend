@@ -6,6 +6,8 @@ import tensorflow as tf
 from PIL import Image
 import io
 import keras
+import os
+import gdown
 keras.config.enable_unsafe_deserialization()
 
 from keras.saving import register_keras_serializable
@@ -26,6 +28,13 @@ MODEL_PATHS = {
     "DenseNet121": "saved_models/DenseNet121_recovered.keras"
 }
 
+MODEL_DRIVE_IDS = {
+    "EfficientNetB3": "1tdmfQlBIazZL1g_ko8MlK_7Qxh5Ln8rg",
+    "ResNet50": "10FwdcjZwgMmOHmh1a9h1cE_C-rVn5lwb",
+    "MobileNetV2": "1gYdYkWMiDauWvTMPyCUyKWC6i21FQp7a",
+    "DenseNet121": "1XupPeRPIomj-4KR8ri-zRte90O3QXTHg"
+}
+
 MODEL_WEIGHTS = {
     "EfficientNetB3": 0.260,
     "ResNet50": 0.256,
@@ -40,10 +49,21 @@ PREPROCESS_FUNCS = {
     "DenseNet121": tf.keras.applications.densenet.preprocess_input
 }
 
+# --- Ensure saved_models/ exists ---
+os.makedirs("saved_models", exist_ok=True)
+
+# --- Download models if not present ---
+def download_if_missing(file_id, path):
+    if not os.path.exists(path):
+        print(f"Downloading {path}...")
+        url = f"https://drive.google.com/uc?id={file_id}"
+        gdown.download(url, path, quiet=False)
+
 # --- LOAD MODELS ---
 print("Loading models...")
 models = {}
 for name, path in MODEL_PATHS.items():
+    download_if_missing(MODEL_DRIVE_IDS[name], path)
     print(f"Loading {name}...")
     models[name] = tf.keras.models.load_model(path)
 print("All models loaded.")
@@ -53,7 +73,7 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Change to specific origins in production
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
