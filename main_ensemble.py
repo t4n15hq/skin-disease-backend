@@ -8,9 +8,9 @@ import io
 import keras
 import os
 import gdown
-keras.config.enable_unsafe_deserialization()
-
 from keras.saving import register_keras_serializable
+
+keras.config.enable_unsafe_deserialization()
 
 # --- CUSTOM FUNCTION ---
 @register_keras_serializable(package="Custom", name="custom_max_pool")
@@ -28,11 +28,11 @@ MODEL_PATHS = {
     "DenseNet121": "saved_models/DenseNet121_recovered.keras"
 }
 
-MODEL_DRIVE_IDS = {
-    "EfficientNetB3": "1pcMCpUCNX2TN7L3oY2uU0_KkhL0wds-a",
-    "ResNet50": "10FwdcjZwgMmOHmh1a9h1cE_C-rVn5lwb",
-    "MobileNetV2": "1gYdYkWMiDauWvTMPyCUyKWC6i21FQp7a",
-    "DenseNet121": "1XupPeRPIomj-4KR8ri-zRte90O3QXTHg"
+MODEL_URLS = {
+    "EfficientNetB3": "https://drive.google.com/uc?id=1jP4-HoFFbGIFugqgRpVVt0V3LhOoKVkY",
+    "ResNet50": "https://drive.google.com/uc?id=1yv4duVkGHTyLEpw92CCJcUy9Y1VxC6Ec",
+    "MobileNetV2": "https://drive.google.com/uc?id=1fJtogp6fH7F2Wa2YvN_KTklgK2-ufqMN",
+    "DenseNet121": "https://drive.google.com/uc?id=1lJ0nlTP7cMTglEM6XIaTvAEZHVJ4dsN8"
 }
 
 MODEL_WEIGHTS = {
@@ -49,21 +49,16 @@ PREPROCESS_FUNCS = {
     "DenseNet121": tf.keras.applications.densenet.preprocess_input
 }
 
-# --- Ensure saved_models/ exists ---
-os.makedirs("saved_models", exist_ok=True)
-
-# --- Download models if not present ---
-def download_if_missing(file_id, path):
-    if not os.path.exists(path):
-        print(f"Downloading {path}...")
-        url = f"https://drive.google.com/uc?id={file_id}"
-        gdown.download(url, path, quiet=False)
-
 # --- LOAD MODELS ---
 print("Loading models...")
 models = {}
+os.makedirs("saved_models", exist_ok=True)
+
 for name, path in MODEL_PATHS.items():
-    download_if_missing(MODEL_DRIVE_IDS[name], path)
+    if not os.path.exists(path):
+        print(f"Downloading {name} from Google Drive...")
+        gdown.download(MODEL_URLS[name], path, quiet=False)
+
     print(f"Loading {name}...")
     models[name] = tf.keras.models.load_model(path)
 print("All models loaded.")
@@ -73,7 +68,7 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # In production, restrict origins
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
