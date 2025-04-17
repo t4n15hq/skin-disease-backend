@@ -10,7 +10,7 @@ import os
 import gdown
 from keras.saving import register_keras_serializable
 
-# Enable unsafe deserialization for custom layers/functions
+# Enable unsafe deserialization for custom Lambda layers
 keras.config.enable_unsafe_deserialization()
 
 # --- CUSTOM FUNCTION ---
@@ -50,30 +50,41 @@ PREPROCESS_FUNCS = {
     "DenseNet121": tf.keras.applications.densenet.preprocess_input
 }
 
-# --- LOAD MODELS ---
-print("Loading models...")
-models = {}
-os.makedirs("saved_models", exist_ok=True)
-
-for name, path in MODEL_PATHS.items():
-    if not os.path.exists(path):
-        print(f"Downloading {name} from Google Drive...")
-        gdown.download(MODEL_URLS[name], path, quiet=False)
-
-    print(f"Loading {name}...")
-    models[name] = tf.keras.models.load_model(path)
-print("All models loaded.")
-
 # --- FASTAPI SETUP ---
 app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, restrict origins
+    allow_origins=["*"],  # Restrict origins in production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# --- HEALTH CHECK ENDPOINT ---
+@app.get("/")
+def root():
+    return {"status": "🩺 App is running."}
+
+# --- GLOBAL MODELS DICT ---
+models = {}
+
+# --- LOAD MODELS AT STARTUP ---
+@app.on_event("startup")
+def load_models():
+    global models
+    print("Loading models...")
+    os.makedirs("saved_models", exist_ok=True)
+
+    for name, path in MODEL_PATHS.items():
+        if not os.path.exists(path):
+            print(f"Downloading {name} from Google Drive...")
+            gdown.download(MODEL_URLS[name], path, quiet=False)
+
+        print(f"Loading {name}...")
+        models[name] = tf.keras.models.load_model(path)
+    
+    print("✅ All models loaded.")
 
 # --- UTILS ---
 def read_imagefile(file) -> Image.Image:
@@ -93,7 +104,7 @@ def predict_ensemble(image):
         ensemble_pred += pred * MODEL_WEIGHTS[name]
     return ensemble_pred
 
-# --- RE-RANK PREDICTIONS BASED ON METADATA ---
+# --- METADATA-BASED ADJUSTMENT ---
 def adjust_with_metadata(predictions, metadata):
     adjusted = []
     for pred in predictions:
